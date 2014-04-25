@@ -77,6 +77,7 @@ class RelatedRedmineTicketsViewlet(common.ViewletBase):
         url = registry.get('vnccollab.redmine.server_url')
         field_id = registry.get('vnccollab.redmine.plone_uid_field_id')
         username, password = self.getAuthCredentials()
+        project_id = registry.get('vnccollab.redmine.project_id')
         if username and password and url and field_id:
             Issue = type("Issue", (ActiveResource,), {'_site': url, '_user':
                          username, '_password': password})
@@ -84,9 +85,12 @@ class RelatedRedmineTicketsViewlet(common.ViewletBase):
             try:
                 # fetch opened issues belonging to authenticated user
                 uuid = self.context.UID()
-                data = Issue.find(**{'cf_%d' % field_id: uuid,
-                                     'status_id': 'o',
-                                     'sort': 'updated_on:desc'})
+                query = {'cf_%d' % field_id: uuid,
+                         'status_id': 'o',
+                         'sort': 'updated_on:desc'}
+                if project_id:
+                    query['project_id']=str(project_id)
+                data = Issue.find(**query)
             except Exception:
                 logException(logger=logger, context=self.context,
                              msg=_(u"Error during fetching redmine tickets %s"

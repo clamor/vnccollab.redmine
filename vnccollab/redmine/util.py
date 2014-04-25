@@ -21,6 +21,12 @@ class RedmineUtil:
         url = api.portal.get_registry_record('vnccollab.redmine.server_url')
         return url
 
+    @memoize
+    def _get_project_id(self):
+        project_id = api.portal.get_registry_record('vnccollab.redmine.project_id')
+        return project_id
+
+
     def _get_credentials(self):
         member = api.user.get_current()
         username = member.getProperty('redmine_username', '')
@@ -61,7 +67,7 @@ class RedmineUtil:
         '''Returns a list of issues that satisfy query.
 
         ARGS:
-            query: Dictionary specifying the query.
+        query: Dictionary specifying the query.
                 offset:
                 limit:
                 sort:
@@ -81,6 +87,8 @@ class RedmineUtil:
                 search_words:
         '''
         IssueClass = self._get_my_issue_class()
+        if self._get_project_id():
+            query['project_id'] = str(self._get_project_id()) 
         result = IssueClass.find(**query)
         result = [Issue(x) for x in result]
         return result
